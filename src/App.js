@@ -39,6 +39,13 @@ function App() {
     return defaultTheme;
   });
 
+  const [costumeData, setCostumeData] = useState([{key:'a',val:'a'}]);
+  const costumeDataChange = (val) => {
+    setCostumeData(val);
+    // typeBoxRef.current.setWordsDict(val);
+  };
+  // const typeBoxRef = React.createRef();
+
   // local persist game mode setting
   const [soundMode, setSoundMode] = useLocalPersistState(false, SOUND_MODE);
 
@@ -176,15 +183,17 @@ function App() {
       <>
         <div className="canvas">
           <GlobalStyles />
-          <Logo isFocusedMode={isFocusedMode} isMusicMode={isMusicMode}></Logo>
+          <Logo isFocusedMode={isFocusedMode} isMusicMode={isMusicMode} onCostumeDataChange={costumeDataChange}></Logo>
           {isWordGameMode && (
             <TypeBox
               textInputRef={textInputRef}
               isFocusedMode={isFocusedMode}
+              costumeData={costumeData}
               soundMode={soundMode}
               soundType={soundType}
               key="type-box"
               handleInputFocus={() => focusTextInput()}
+              // onRef={typeBoxRef}
             ></TypeBox>
           )}
           {isSentenceGameMode && (

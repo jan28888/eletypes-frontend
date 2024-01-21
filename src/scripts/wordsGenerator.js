@@ -21,6 +21,8 @@ const wordsGenerator = (wordsCount, difficulty, languageMode) => {
           const rand = randomIntFromRange(0, 550);
           EnglishWordList.push(COMMON_WORDS[rand]);
         }
+        console.log('EnglishWordList:', EnglishWordList);
+        console.trace('EnglishWordList');
         return EnglishWordList;
     }
     const randomWordsGenerated = randomWords({ exactly: wordsCount, maxLength: 7 });

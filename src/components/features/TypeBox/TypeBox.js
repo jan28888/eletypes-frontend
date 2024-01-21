@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import MD5 from "../../utils/md5";
 import useSound from "use-sound";
 import {
   wordsGenerator,
@@ -17,6 +18,7 @@ import { Dialog } from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {
   DEFAULT_COUNT_DOWN,
+  COUNT_DOWN_8640,
   COUNT_DOWN_90,
   COUNT_DOWN_60,
   COUNT_DOWN_30,
@@ -44,6 +46,7 @@ import { SOUND_MAP } from "../sound/sound";
 const TypeBox = ({
   textInputRef,
   isFocusedMode,
+  costumeData,
   soundMode,
   soundType,
   handleInputFocus,
@@ -103,12 +106,33 @@ const TypeBox = ({
   // set up words state
   const [wordsDict, setWordsDict] = useState(() => {
     if (language === ENGLISH_MODE) {
-      return wordsGenerator(DEFAULT_WORDS_COUNT, difficulty, ENGLISH_MODE);
+      // console.log('set up words state:', costumeData);
+      return costumeData.length === 0 ? wordsGenerator(DEFAULT_WORDS_COUNT, difficulty, ENGLISH_MODE) : costumeData;
+      // return wordsGenerator(DEFAULT_WORDS_COUNT, difficulty, ENGLISH_MODE)
     }
     if (language === CHINESE_MODE) {
       return chineseWordsGenerator(difficulty, CHINESE_MODE);
     }
   });
+
+useEffect(() => {
+  setWordsDict(costumeData);
+}, [costumeData]);
+
+  const skipAudioList = () => {
+    let skipWordList = ['i', 'me', 'we', 'us', 'you', 'it', 'he', 'him', 'his', 'she', 'they', 'was', 'a' ,'am', 'are', 'in', 'on', 
+    'with', 'by', 'for', 'at', 'about', 'under', 'of', 'to', 'the', 'from', 'but', 'had', 'into', 'and', 'then', 'off', 'yes', 
+    'no', 'go', 'get', 'if']
+    return !skipWordList.includes(words[currWordIndex].toLowerCase().match(/[a-zA-Z]/g).join(''))
+  }
+
+  const playAudio = () => {
+    const audio = document.getElementById("hiddenAudio");
+    if (audio) {
+      audio.load();
+      audio.play();
+    }
+  }
 
   const words = useMemo(() => {
     return wordsDict.map((e) => e.val);
@@ -117,6 +141,45 @@ const TypeBox = ({
   const wordsKey = useMemo(() => {
     return wordsDict.map((e) => e.key);
   }, [wordsDict]);
+
+  const sentenceList = useMemo(() => {
+    let tempList = [];
+    let tempStr = '';
+    words.forEach((element, index) => {
+      tempStr += ` ${element}`;
+      if (!element.includes('.')) {
+        return;
+      }
+      tempList.push([index, tempStr]);
+      tempStr = '';
+    });
+    console.log('sentenceList', tempList);
+    return tempList;
+  }, [words])
+
+  function getTranslator(item) {
+    if (document.getElementsByClassName('getTranslator').length) {
+      return;
+    }
+    let qureText = item[1];
+    var script = document.createElement('script');
+    script.classList.add('getTranslator');
+    window.handleResponse = (data) => {
+      item.push(data.trans_result[0].dst)
+      console.log(data);
+    }
+
+    let secret = 'QE9M_B9TzWbWanDjxL6n';
+    let appId = '20240121001947250';
+    let sign=MD5(`${appId}${qureText}1435660288${secret}`);
+    script.src = `http://api.fanyi.baidu.com/api/trans/vip/translate?q=${qureText}&from=en&to=zh&appid=${appId}&salt=1435660288&sign=${sign}&callback=handleResponse`;
+
+    document.body.appendChild(script);
+    setTimeout(()=>{
+      let parentElement = script.parentNode;
+      parentElement.removeChild(script);
+    }, 2000);
+  }
 
   const wordSpanRefs = useMemo(
     () =>
@@ -160,8 +223,19 @@ const TypeBox = ({
   const keyString = currWordIndex + "." + currCharIndex;
   const [currChar, setCurrChar] = useState("");
 
+  const getCurrentTranslator = useMemo (() => {
+    if (!sentenceList?.some){
+      return '';
+    }
+    let currentItem;
+    sentenceList.some(item => currWordIndex <= item[0] && (currentItem = item))
+    currentItem?.length === 2 && getTranslator(currentItem)
+    return currentItem ? currentItem.length === 2 ? currentItem[1] : currentItem[2] : '';
+  },[currWordIndex, sentenceList])
+
   useEffect(() => {
-    if (currWordIndex === DEFAULT_WORDS_COUNT - 1) {
+    // 暂时不走这个判断
+    if (currWordIndex === DEFAULT_WORDS_COUNT - 1 && false) {
       if (language === ENGLISH_MODE) {
         const generatedEng = wordsGenerator(
           DEFAULT_WORDS_COUNT,
@@ -304,6 +378,8 @@ const TypeBox = ({
       return;
     }
     setCurrInput(e.target.value);
+    e.target.value.length === 1 && (console.log('current playAudio:', words[currWordIndex]));
+    e.target.value.length === 1 && skipAudioList() && playAudio();
     inputWordsHistory[currWordIndex] = e.target.value.trim();
     setInputWordsHistory(inputWordsHistory);
   };
@@ -452,7 +528,7 @@ const TypeBox = ({
   const checkPrev = () => {
     const wordToCompare = words[currWordIndex];
     const currInputWithoutSpaces = currInput.trim();
-    const isCorrect = wordToCompare === currInputWithoutSpaces;
+    const isCorrect = wordToCompare.toLowerCase().replace(/"/g, '\'') === currInputWithoutSpaces;
     if (!currInputWithoutSpaces || currInputWithoutSpaces.length === 0) {
       return null;
     }
@@ -541,6 +617,7 @@ const TypeBox = ({
   };
 
   const getCharClassName = (wordIdx, charIdx, char, word) => {
+    char = char.toLowerCase().replace(/"/g, '\'')
     const keyString = wordIdx + "." + charIdx;
     if (
       pacingStyle === PACING_CARET &&
@@ -681,6 +758,7 @@ const TypeBox = ({
         </div>
       )}
       <div className="stats">
+        <div>{getCurrentTranslator}</div>
         <Stats
           status={status}
           wpm={wpm}
@@ -716,8 +794,20 @@ const TypeBox = ({
                   <RestartAltIcon />
                 </Tooltip>
               </IconButton>
+              <div>
+                <audio id="hiddenAudio" hidden src={`https://dict.youdao.com/dictvoice?audio=${words[currWordIndex]}&type=2`} preload="none" controls controlsList="nodownload nofullscreen noremoteplayback" />
+              </div>
               {menuEnabled && (
                 <>
+                  <IconButton
+                    onClick={() => {
+                      reset(COUNT_DOWN_8640, difficulty, language, false);
+                    }}
+                  >
+                    <span className={getTimerButtonClassName(COUNT_DOWN_8640)}>
+                      {COUNT_DOWN_8640}
+                    </span>
+                  </IconButton>
                   <IconButton
                     onClick={() => {
                       reset(COUNT_DOWN_90, difficulty, language, false);

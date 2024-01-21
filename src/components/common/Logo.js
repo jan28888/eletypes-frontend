@@ -1,7 +1,11 @@
 import React from "react";
 import KeyboardAltIcon from "@mui/icons-material/KeyboardAlt";
+import InputBox from "../features/InputBox";
 
-const Logo = ({ isFocusedMode, isMusicMode }) => {
+const Logo = ({ isFocusedMode, isMusicMode, onCostumeDataChange }) => {
+  const inputBoxDataChange = (inputBoxData) => {
+    onCostumeDataChange(inputBoxData);
+  }
   return (
     <div className="header" style={{visibility: isFocusedMode ? 'hidden' : 'visible' }}>
       <h1>
@@ -10,6 +14,9 @@ const Logo = ({ isFocusedMode, isMusicMode }) => {
       <span className="sub-header">
         an elegant typing experience, just start typing
       </span>
+      <div>
+          <InputBox onInputBoxDataChange={inputBoxDataChange}/>
+      </div>
     </div>
   );
 };
