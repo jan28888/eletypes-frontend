@@ -757,6 +757,16 @@ useEffect(() => {
           </div>
         </div>
       )}
+      <input
+        key="hidden-input"
+        ref={textInputRef}
+        type="text"
+        className="hidden-input"
+        onKeyDown={(e) => handleKeyDown(e)}
+        onKeyUp={(e) => handleKeyUp(e)}
+        value={currInput}
+        onChange={(e) => UpdateInput(e)}
+      />
       <div className="stats">
         <div>{getCurrentTranslator}</div>
         <Stats
@@ -955,16 +965,6 @@ useEffect(() => {
           </Grid>
         </div>
       </div>
-      <input
-        key="hidden-input"
-        ref={textInputRef}
-        type="text"
-        className="hidden-input"
-        onKeyDown={(e) => handleKeyDown(e)}
-        onKeyUp={(e) => handleKeyUp(e)}
-        value={currInput}
-        onChange={(e) => UpdateInput(e)}
-      />
       <Dialog
         PaperProps={{
           style: {
