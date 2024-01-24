@@ -377,10 +377,10 @@ useEffect(() => {
     if (status === "finished") {
       return;
     }
-    setCurrInput(e.target.value);
+    setCurrInput(e.target.value.toLowerCase().replace(/"/g, '\''));
     e.target.value.length === 1 && (console.log('current playAudio:', words[currWordIndex]));
     e.target.value.length === 1 && skipAudioList() && playAudio();
-    inputWordsHistory[currWordIndex] = e.target.value.trim();
+    inputWordsHistory[currWordIndex] = e.target.value.trim().toLowerCase().replace(/"/g, '\'');
     setInputWordsHistory(inputWordsHistory);
   };
 
@@ -482,7 +482,7 @@ useEffect(() => {
       return;
     } else {
       setCurrCharIndex(currCharIndex + 1);
-      setCurrChar(key);
+      setCurrChar(key.toLowerCase().replace(/"/g, '\''));
       return;
       // if (keyCode >= 65 && keyCode <= 90) {
       //   setCurrCharIndex(currCharIndex + 1);
@@ -526,9 +526,9 @@ useEffect(() => {
   };
 
   const checkPrev = () => {
-    const wordToCompare = words[currWordIndex];
+    const wordToCompare = words[currWordIndex].toLowerCase().replace(/"/g, '\'');
     const currInputWithoutSpaces = currInput.trim();
-    const isCorrect = wordToCompare.toLowerCase().replace(/"/g, '\'') === currInputWithoutSpaces;
+    const isCorrect = wordToCompare === currInputWithoutSpaces;
     if (!currInputWithoutSpaces || currInputWithoutSpaces.length === 0) {
       return null;
     }
