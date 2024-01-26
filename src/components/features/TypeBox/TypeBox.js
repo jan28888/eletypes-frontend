@@ -165,14 +165,17 @@ useEffect(() => {
     var script = document.createElement('script');
     script.classList.add('getTranslator');
     window.handleResponse = (data) => {
-      item.push(data.trans_result[0].dst)
+      //item.push(data.trans_result[0].dst)
+      item.push(data.data.translate_result)
       console.log(data);
     }
 
-    let secret = 'QE9M_B9TzWbWanDjxL6n';
-    let appId = '20240121001947250';
-    let sign=MD5(`${appId}${qureText}1435660288${secret}`);
-    script.src = `http://api.fanyi.baidu.com/api/trans/vip/translate?q=${qureText}&from=en&to=zh&appid=${appId}&salt=1435660288&sign=${sign}&callback=handleResponse`;
+    script.src = `https://findmyip.net/api/translate.php?text=${qureText}&callback=handleResponse`
+
+    // let secret = 'QE9M_B9TzWbWanDjxL6n';
+    // let appId = '20240121001947250';
+    // let sign=MD5(`${appId}${qureText}1435660288${secret}`);
+    // script.src = `http://api.fanyi.baidu.com/api/trans/vip/translate?q=${qureText}&from=en&to=zh&appid=${appId}&salt=1435660288&sign=${sign}&callback=handleResponse`;
 
     document.body.appendChild(script);
     setTimeout(()=>{
