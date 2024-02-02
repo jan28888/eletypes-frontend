@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import MD5 from "../../utils/md5";
+// import MD5 from "../../utils/md5";
 import useSound from "use-sound";
 import {
   wordsGenerator,
@@ -157,32 +157,60 @@ useEffect(() => {
     return tempList;
   }, [words])
 
-  function getTranslator(item) {
-    if (document.getElementsByClassName('getTranslator').length) {
-      return;
-    }
-    let qureText = item[1];
-    var script = document.createElement('script');
-    script.classList.add('getTranslator');
-    window.handleResponse = (data) => {
-      //item.push(data.trans_result[0].dst)
-      item.push(data.data.translate_result)
-      console.log(data);
-    }
+  function debounce(func, delay) {
+    return function() {
+      const context = this;
+      const args = arguments;
+      
+      clearTimeout(window.timeoutId);
+      
+      window.timeoutId = setTimeout(function() {
+        func.apply(context, args);
+      }, delay);
+    };
+  }
 
-    script.src = `https://findmyip.net/api/translate.php?text=${qureText}&callback=handleResponse`
+  function getTranslatorFromPhp(item) {
+    let qureText = item[1].replaceAll(';', ',');
+    // fetch(`http://192.168.50.66/eleTypes/translate.php?inputText=${qureText}`)
+    fetch(`http://192.168.50.66:8001/?text=${qureText}`)
+    .then(res=>res.json())
+      .then(data => {
+        console.log(data);
+        item[2] = data;
+        // 在这里处理返回的数据
+      })
+      .catch(error => {
+        console.error(error);
+        // 在这里处理错误
+      });
+  }
+
+  const getTranslator = debounce(getTranslatorFromPhp, 500);
+
+  // function getTranslator(item) {
+  //   if (document.getElementsByClassName('getTranslator').length) {
+  //     return;
+  //   }
+  //   let qureText = item[1];
+  //   var script = document.createElement('script');
+  //   script.classList.add('getTranslator');
+  //   window.handleResponse = (data) => {
+  //     item.push(data.trans_result[0].dst)
+  //     console.log(data);
+  //   }
 
     // let secret = 'QE9M_B9TzWbWanDjxL6n';
     // let appId = '20240121001947250';
     // let sign=MD5(`${appId}${qureText}1435660288${secret}`);
     // script.src = `http://api.fanyi.baidu.com/api/trans/vip/translate?q=${qureText}&from=en&to=zh&appid=${appId}&salt=1435660288&sign=${sign}&callback=handleResponse`;
 
-    document.body.appendChild(script);
-    setTimeout(()=>{
-      let parentElement = script.parentNode;
-      parentElement.removeChild(script);
-    }, 2000);
-  }
+    // document.body.appendChild(script);
+    // setTimeout(()=>{
+    //   let parentElement = script.parentNode;
+    //   parentElement.removeChild(script);
+    // }, 2000);
+  // }
 
   const wordSpanRefs = useMemo(
     () =>
@@ -231,9 +259,10 @@ useEffect(() => {
       return '';
     }
     let currentItem;
-    sentenceList.some(item => currWordIndex <= item[0] && (currentItem = item))
-    currentItem?.length === 2 && getTranslator(currentItem)
+    sentenceList.some(item => currWordIndex <= item[0] && (currentItem = item));
+    currentItem?.length === 2 && currentItem.push(`${currentItem[1]} 请求中...`) && getTranslator(currentItem);
     return currentItem ? currentItem.length === 2 ? currentItem[1] : currentItem[2] : '';
+    // eslint-disable-next-line
   },[currWordIndex, sentenceList])
 
   useEffect(() => {
