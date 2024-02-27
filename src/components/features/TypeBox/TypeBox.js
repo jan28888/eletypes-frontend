@@ -47,6 +47,8 @@ const TypeBox = ({
   textInputRef,
   isFocusedMode,
   costumeData,
+  articalName,
+  sentenceData,
   soundMode,
   soundType,
   handleInputFocus,
@@ -115,9 +117,11 @@ const TypeBox = ({
     }
   });
 
-useEffect(() => {
-  setWordsDict(costumeData);
-}, [costumeData]);
+  const [sentenceList, setSentenceList] =useState([]);
+
+  useEffect(() => {
+    setWordsDict(costumeData);
+  }, [costumeData]);
 
   const skipAudioList = () => {
     let skipWordList = ['i', 'me', 'we', 'us', 'you', 'it', 'he', 'him', 'his', 'she', 'they', 'was', 'a' ,'am', 'are', 'in', 'on', 
@@ -142,7 +146,7 @@ useEffect(() => {
     return wordsDict.map((e) => e.key);
   }, [wordsDict]);
 
-  const sentenceList = useMemo(() => {
+  const dealSentenceList = () => {
     let tempList = [];
     let tempStr = '';
     words.forEach((element, index) => {
@@ -150,12 +154,28 @@ useEffect(() => {
       if (!element.includes('.')) {
         return;
       }
-      tempList.push([index, tempStr]);
+      tempList.push([index, tempStr.trim()]);
       tempStr = '';
     });
     console.log('sentenceList', tempList);
     return tempList;
-  }, [words])
+  }
+
+  useEffect(() => {
+    let str = '';
+    words.some(item => {
+      str += ` ${item}`;
+      return item.includes('.')
+    })
+    if (sentenceData.length > 0 && sentenceData[0][1] === str.trim()) {
+      return
+    }
+    setSentenceList(dealSentenceList())
+  },[words])
+
+  useEffect(() => {
+    setSentenceList(sentenceData)
+  },[sentenceData])
 
   function debounce(func, delay) {
     return function() {
@@ -178,6 +198,7 @@ useEffect(() => {
       .then(data => {
         console.log(data);
         item[2] = data;
+        articalName.length > 0 && saveHistoryArtical(articalName[0], articalName[1], sentenceList)
         // 在这里处理返回的数据
       })
       .catch(error => {
@@ -187,6 +208,27 @@ useEffect(() => {
   }
 
   const getTranslator = debounce(getTranslatorFromPhp, 500);
+
+  function saveHistoryArtical(name, sentence, content) {
+    const url = "http://192.168.50.66:8001/postHistoryArtical"
+    let articalInfo = {
+      "path": `./library/${name}/${sentence}.json`,
+      "content": JSON.stringify(content)
+    }
+
+    let requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(articalInfo)
+    };
+
+    fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error(error));
+  }
 
   // function getTranslator(item) {
   //   if (document.getElementsByClassName('getTranslator').length) {

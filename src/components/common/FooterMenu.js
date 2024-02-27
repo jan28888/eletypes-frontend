@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Grid } from "@mui/material";
 import { Box } from "@mui/system";
-import { Tooltip } from "@mui/material";
+import { Tooltip} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -43,6 +43,7 @@ const FooterMenu = ({
   soundType,
   handleSoundTypeChange,
   handleThemeChange,
+  handleHistoryListChange,
   toggleFocusedMode,
   toggleMusicMode,
   toggleCoffeeMode,
@@ -59,6 +60,15 @@ const FooterMenu = ({
   const isSiteInfoDisabled = isMusicMode || isFocusedMode;
   const isBottomLogoEnabled = isFocusedMode && !isMusicMode;
   const isTypeTestEnabled = !isCoffeeMode && !isTrainerMode && !isWordsCardMode;
+
+  const [historyList, setHistoryList] = useState([{ value: "darkTheme", label: "Dark" }]);
+
+  useEffect(() => {
+    // 远程加载选项的逻辑
+    fetch(`http://192.168.50.66:8001/getHistoryList`)
+      .then(response => response.json())
+      .then(data => setHistoryList(data));
+  }, []);
 
   const getModeButtonClassName = (mode) => {
     if (mode) {
@@ -177,6 +187,14 @@ const FooterMenu = ({
                   {SENTENCE_MODE_LABEL}
                 </span>
               </IconButton>
+              <Select
+                classNamePrefix="Select"
+                options={historyList}
+                isSearchable={true}
+                isSelected={false}
+                onChange={handleHistoryListChange}
+                menuPlacement="top"
+              ></Select>
             </>
           )}
         </Box>

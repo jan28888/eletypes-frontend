@@ -308,6 +308,11 @@ export const GlobalStyles = createGlobalStyle`
       100%	 {color: #F48FB1;}
     }
   }
+  .articalFirstName, .articalLastName, .content {
+    background-color: rgba(60,64,67,0.15);
+    border-width: 0px 0px 1px 0px;
+    margin-right: 10px;
+}
   .support-me-image{
     height: 75%;
     width: 75%;

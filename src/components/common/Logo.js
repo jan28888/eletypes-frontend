@@ -3,8 +3,8 @@ import KeyboardAltIcon from "@mui/icons-material/KeyboardAlt";
 import InputBox from "../features/InputBox";
 
 const Logo = ({ isFocusedMode, isMusicMode, onCostumeDataChange }) => {
-  const inputBoxDataChange = (inputBoxData) => {
-    onCostumeDataChange(inputBoxData);
+  const inputBoxDataChange = (inputBoxData, articalName) => {
+    onCostumeDataChange(inputBoxData, articalName);
   }
   return (
     <div className="header" style={{visibility: isFocusedMode ? 'hidden' : 'visible' }}>

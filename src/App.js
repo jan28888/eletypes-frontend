@@ -40,8 +40,11 @@ function App() {
   });
 
   const [costumeData, setCostumeData] = useState([{key:'a',val:'a'}]);
-  const costumeDataChange = (val) => {
+  const [sentenceData, setsentenceData] = useState([]);
+  const [articalName, setArticalName] = useState([]);
+  const costumeDataChange = (val, name) => {
     setCostumeData(val);
+    setArticalName(name);
     // typeBoxRef.current.setWordsDict(val);
   };
   // const typeBoxRef = React.createRef();
@@ -99,6 +102,26 @@ function App() {
     window.localStorage.setItem("theme", JSON.stringify(e.value));
     setTheme(e.value);
   };
+
+  const handleHistoryListChange = (e) => {
+    let nameList = e.value.split('/');
+    nameList = [nameList[2], nameList[3].slice(0, -5)]
+    setArticalName(nameList);
+    fetch(`http://192.168.50.66:8001/getHistoryArtical?text=${e.value}`)
+    .then(response => response.json())
+    .then(data => {
+      setsentenceData(data);
+
+      let wordDict = [];
+      data.forEach(element => {
+        let sentence = element[1].split(' ').filter(str => !['', ' ', '  ', '  '].includes(str)).map(str => {
+          return {key:str, val:str}
+        })
+        wordDict = [...wordDict, ...sentence];
+      })
+      setCostumeData(wordDict);
+    });
+  }
 
   const handleSoundTypeChange = (e) => {
     setSoundType(e.label);
@@ -189,6 +212,8 @@ function App() {
               textInputRef={textInputRef}
               isFocusedMode={isFocusedMode}
               costumeData={costumeData}
+              articalName={articalName}
+              sentenceData={sentenceData}
               soundMode={soundMode}
               soundType={soundType}
               key="type-box"
@@ -231,6 +256,7 @@ function App() {
             soundType={soundType}
             handleSoundTypeChange={handleSoundTypeChange}
             handleThemeChange={handleThemeChange}
+            handleHistoryListChange={handleHistoryListChange}
             toggleFocusedMode={toggleFocusedMode}
             toggleMusicMode={toggleMusicMode}
             toggleCoffeeMode={toggleCoffeeMode}
