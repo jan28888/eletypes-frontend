@@ -515,23 +515,34 @@ const TypeBox = ({
       start();
     }
 
+    // up arrow or down arrow for skip sentence.
+    if (keyCode === 38) {
+      setCurrInput("");
+      let currentItemIndex;
+      sentenceList.some((item, index) => currWordIndex <= item[0] && (currentItemIndex = index));
+      setCurrWordIndex(currentItemIndex > 1 ? sentenceList[currentItemIndex - 2][0] + 1 : 0)
+      setCurrCharIndex(-1);
+      textInputRef.current.focus();
+      return;
+    } 
+    if (keyCode === 40) {
+      setCurrInput("");
+      let currentItemIndex;
+      sentenceList.some((item, index) => currWordIndex <= item[0] && (currentItemIndex = index));
+      setCurrWordIndex(currentItemIndex < sentenceList.length - 1 ? sentenceList[currentItemIndex][0] + 1 : sentenceList[currentItemIndex][0]);
+      setCurrCharIndex(-1);
+      textInputRef.current.focus();
+      return;
+    }
+
     // space bar
     if (keyCode === 32) {
-      const prevCorrectness = checkPrev();
-      // advance to next regardless prev correct/not
-      if (prevCorrectness === true || prevCorrectness === false) {
-        // reset currInput
-        setCurrInput("");
-        // advance to next
-        setCurrWordIndex(currWordIndex + 1);
-        setCurrCharIndex(-1);
-        return;
-      } else {
-        // but don't allow entire word skip
-        // console.log("entire word skip not allowed");
-        return;
-      }
-
+      // reset currInput
+      setCurrInput("");
+      // advance to next
+      setCurrWordIndex(currWordIndex + 1);
+      setCurrCharIndex(-1);
+      return;
       // backspace
     } else if (keyCode === 8) {
       // delete the mapping match records
@@ -542,7 +553,8 @@ const TypeBox = ({
         // only allow delete prev word, rewind to previous
         if (wordsInCorrect.has(currWordIndex - 1)) {
           // console.log("detected prev incorrect, rewinding to previous");
-          const prevInputWord = inputWordsHistory[currWordIndex - 1];
+          // const prevInputWord = inputWordsHistory[currWordIndex - 1];
+          const prevInputWord = words[currWordIndex - 1];
           // console.log(prevInputWord + " ")
           setCurrInput(prevInputWord + " ");
           setCurrCharIndex(prevInputWord.length - 1);
@@ -581,7 +593,8 @@ const TypeBox = ({
   const getExtraCharsDisplay = (word, i) => {
     let input = inputWordsHistory[i];
     if (!input) {
-      input = currInput.trim();
+      // input = currInput.trim();
+      return null;
     }
     if (i > currWordIndex) {
       return null;

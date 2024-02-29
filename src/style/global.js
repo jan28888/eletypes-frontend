@@ -129,7 +129,7 @@ export const GlobalStyles = createGlobalStyle`
     display: block;
     max-width: 1000px;
     height: 140px;
-    overflow: hidden;
+    overflow: hidden auto;
     margin-left: auto;
     margin-right: auto;
     position: relative
@@ -140,6 +140,24 @@ export const GlobalStyles = createGlobalStyle`
     and (-webkit-min-device-pixel-ratio: 3) { 
       top:200px;
       width: 60%;
+    }
+    ::-webkit-scrollbar {
+      width: 4px; /* 设置滚动条的宽度 */
+    }
+    
+    /* 定义滚动条轨道的背景颜色 */
+    ::-webkit-scrollbar-track {
+      background-color: #888;
+    }
+    
+    /* 定义滚动条滑块的背景颜色 */
+    ::-webkit-scrollbar-thumb {
+      background-color: #4e4e4e;
+    }
+    
+    /* 定义滚动条滑块悬停时的背景颜色 */
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
     }
   }
   .type-box-chinese {
