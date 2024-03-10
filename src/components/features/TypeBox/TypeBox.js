@@ -207,7 +207,9 @@ const TypeBox = ({
       });
   }
 
+  // 防抖
   const getTranslator = debounce(getTranslatorFromPhp, 500);
+  const playAudioWithDebounce = debounce(playAudio, 1500);
 
   function saveHistoryArtical(name, sentence, content) {
     const url = "http://192.168.50.66:8001/postHistoryArtical"
@@ -302,7 +304,7 @@ const TypeBox = ({
     }
     let currentItem;
     sentenceList.some(item => currWordIndex <= item[0] && (currentItem = item));
-    currentItem?.length === 2 && currentItem.push(`${currentItem[1]} 请求中...`) && getTranslator(currentItem);
+    ((currentItem?.length === 2 && currentItem.push(`${currentItem[1]} 请求中...`)) || (currentItem && currentItem[2].includes(' 请求中...'))) && getTranslator(currentItem);
     return currentItem ? currentItem.length === 2 ? currentItem[1] : currentItem[2] : '';
     // eslint-disable-next-line
   },[currWordIndex, sentenceList])
@@ -387,63 +389,63 @@ const TypeBox = ({
 
     if (status !== "started") {
       setStatus("started");
-      let intervalId = setInterval(() => {
-        setCountDown((prevCountdown) => {
-          if (prevCountdown === 0) {
-            clearInterval(intervalId);
-            // current total extra inputs char count
-            const currCharExtraCount = Object.values(history)
-              .filter((e) => typeof e === "number")
-              .reduce((a, b) => a + b, 0);
+      // let intervalId = setInterval(() => {
+      //   setCountDown((prevCountdown) => {
+      //     if (prevCountdown === 0) {
+      //       clearInterval(intervalId);
+      //       // current total extra inputs char count
+      //       const currCharExtraCount = Object.values(history)
+      //         .filter((e) => typeof e === "number")
+      //         .reduce((a, b) => a + b, 0);
 
-            // current correct inputs char count
-            const currCharCorrectCount = Object.values(history).filter(
-              (e) => e === true
-            ).length;
+      //       // current correct inputs char count
+      //       const currCharCorrectCount = Object.values(history).filter(
+      //         (e) => e === true
+      //       ).length;
 
-            // current correct inputs char count
-            const currCharIncorrectCount = Object.values(history).filter(
-              (e) => e === false
-            ).length;
+      //       // current correct inputs char count
+      //       const currCharIncorrectCount = Object.values(history).filter(
+      //         (e) => e === false
+      //       ).length;
 
-            // current missing inputs char count
-            const currCharMissingCount = Object.values(history).filter(
-              (e) => e === undefined
-            ).length;
+      //       // current missing inputs char count
+      //       const currCharMissingCount = Object.values(history).filter(
+      //         (e) => e === undefined
+      //       ).length;
 
-            // current total advanced char counts
-            const currCharAdvancedCount =
-              currCharCorrectCount +
-              currCharMissingCount +
-              currCharIncorrectCount;
+      //       // current total advanced char counts
+      //       const currCharAdvancedCount =
+      //         currCharCorrectCount +
+      //         currCharMissingCount +
+      //         currCharIncorrectCount;
 
-            // When total inputs char count is 0,
-            // that is to say, both currCharCorrectCount and currCharAdvancedCount are 0,
-            // accuracy turns out to be 0 but NaN.
-            const accuracy =
-              currCharCorrectCount === 0
-                ? 0
-                : (currCharCorrectCount / currCharAdvancedCount) * 100;
+      //       // When total inputs char count is 0,
+      //       // that is to say, both currCharCorrectCount and currCharAdvancedCount are 0,
+      //       // accuracy turns out to be 0 but NaN.
+      //       const accuracy =
+      //         currCharCorrectCount === 0
+      //           ? 0
+      //           : (currCharCorrectCount / currCharAdvancedCount) * 100;
 
-            setStatsCharCount([
-              accuracy,
-              currCharCorrectCount,
-              currCharIncorrectCount,
-              currCharMissingCount,
-              currCharAdvancedCount,
-              currCharExtraCount,
-            ]);
+      //       setStatsCharCount([
+      //         accuracy,
+      //         currCharCorrectCount,
+      //         currCharIncorrectCount,
+      //         currCharMissingCount,
+      //         currCharAdvancedCount,
+      //         currCharExtraCount,
+      //       ]);
 
-            checkPrev();
-            setStatus("finished");
+      //       checkPrev();
+      //       setStatus("finished");
 
-            return countDownConstant;
-          } else {
-            return prevCountdown - 1;
-          }
-        });
-      }, 1000);
-      setIntervalId(intervalId);
+      //       return countDownConstant;
+      //     } else {
+      //       return prevCountdown - 1;
+      //     }
+      //   });
+      // }, 1000);
+      // setIntervalId(intervalId);
     }
   };
 
@@ -453,7 +455,7 @@ const TypeBox = ({
     }
     setCurrInput(e.target.value.toLowerCase().replace(/"/g, '\''));
     e.target.value.length === 1 && (console.log('current playAudio:', words[currWordIndex]));
-    e.target.value.length === 1 && skipAudioList() && playAudio();
+    e.target.value.length === 1 && skipAudioList() && playAudioWithDebounce();
     inputWordsHistory[currWordIndex] = e.target.value.trim().toLowerCase().replace(/"/g, '\'');
     setInputWordsHistory(inputWordsHistory);
   };
@@ -535,8 +537,19 @@ const TypeBox = ({
       return;
     }
 
-    // space bar
-    if (keyCode === 32) {
+    // left arrow bar
+    if (keyCode === 37 && currWordIndex > 0) {
+      // reset currInput
+      setCurrInput("");
+      // advance to next
+      setCurrWordIndex(currWordIndex - 1);
+      // set current word's last char.
+      setCurrCharIndex(words[currWordIndex - 1].length - 1);
+      return;
+    }
+
+    // space bar or right arrow bar
+    if ((keyCode === 32 || keyCode === 39) && currWordIndex < words.length - 1) {
       // reset currInput
       setCurrInput("");
       // advance to next
