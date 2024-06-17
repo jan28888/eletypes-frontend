@@ -13,11 +13,9 @@ import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import useLocalPersistState from "../../../hooks/useLocalPersistState";
 import CapsLockSnackbar from "../CapsLockSnackbar";
-import Stats from "./Stats";
 import { Dialog } from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import {
-  DEFAULT_COUNT_DOWN,
   COUNT_DOWN_8640,
   COUNT_DOWN_90,
   COUNT_DOWN_60,
@@ -55,11 +53,6 @@ const TypeBox = ({
 }) => {
   const [play] = useSound(SOUND_MAP[soundType], { volume: 0.5 });
 
-  // local persist timer
-  const [countDownConstant, setCountDownConstant] = useLocalPersistState(
-    DEFAULT_COUNT_DOWN,
-    "timer-constant"
-  );
 
   // local persist pacing style
   const [pacingStyle, setPacingStyle] = useLocalPersistState(
@@ -90,12 +83,12 @@ const TypeBox = ({
     if (e.keyCode === 13 || e.keyCode === 9) {
       e.preventDefault();
       setOpenRestart(false);
-      reset(countDownConstant, difficulty, language, false);
+      reset(difficulty, language, false);
     } // press space to redo
     else if (e.keyCode === 32) {
       e.preventDefault();
       setOpenRestart(false);
-      reset(countDownConstant, difficulty, language, true);
+      reset(difficulty, language, true);
     } else {
       e.preventDefault();
       setOpenRestart(false);
@@ -192,8 +185,8 @@ const TypeBox = ({
 
   function getTranslatorFromPhp(item) {
     let qureText = item[1].replaceAll(';', ',');
-    // fetch(`http://192.168.50.66/eleTypes/translate.php?inputText=${qureText}`)
-    fetch(`http://192.168.50.66:8001/?text=${qureText}`)
+    // fetch(`http://192.168.50.115/eleTypes/translate.php?inputText=${qureText}`)
+    fetch(`http://192.168.50.115:8001/?text=${qureText}`)
     .then(res=>res.json())
       .then(data => {
         console.log(data);
@@ -212,7 +205,7 @@ const TypeBox = ({
   const playAudioWithDebounce = debounce(playAudio, 1500);
 
   function saveHistoryArtical(name, sentence, content) {
-    const url = "http://192.168.50.66:8001/postHistoryArtical"
+    const url = "http://192.168.50.115:8001/postHistoryArtical"
     let articalInfo = {
       "path": `./library/${name}/${sentence}.json`,
       "content": JSON.stringify(content)
@@ -265,7 +258,6 @@ const TypeBox = ({
   );
 
   // set up timer state
-  const [countDown, setCountDown] = useState(countDownConstant);
   const [intervalId, setIntervalId] = useState(null);
 
   // set up game loop status state
@@ -280,18 +272,14 @@ const TypeBox = ({
   const [currWordIndex, setCurrWordIndex] = useState(0);
   // set up char advancing index
   const [currCharIndex, setCurrCharIndex] = useState(-1);
-  const [prevInput, setPrevInput] = useState("");
 
   // set up words examine history
-  const [wordsCorrect, setWordsCorrect] = useState(new Set());
   const [wordsInCorrect, setWordsInCorrect] = useState(new Set());
   const [inputWordsHistory, setInputWordsHistory] = useState({});
 
   // setup stats
   const [rawKeyStrokes, setRawKeyStrokes] = useState(0);
   const [wpmKeyStrokes, setWpmKeyStrokes] = useState(0);
-  const [wpm, setWpm] = useState(0);
-  const [statsCharCount, setStatsCharCount] = useState([]);
 
   // set up char examine hisotry
   const [history, setHistory] = useState({});
@@ -339,7 +327,7 @@ const TypeBox = ({
     }
   }, [currWordIndex, wordSpanRefs, difficulty, language]);
 
-  const reset = (newCountDown, difficulty, language, isRedo) => {
+  const reset = (difficulty, language, isRedo) => {
     setStatus("waiting");
     if (!isRedo) {
       if (language === CHINESE_MODE) {
@@ -349,23 +337,18 @@ const TypeBox = ({
         setWordsDict(wordsGenerator(DEFAULT_WORDS_COUNT, difficulty, language));
       }
     }
-    setCountDownConstant(newCountDown);
-    setCountDown(newCountDown);
     setDifficulty(difficulty);
     setLanguage(language);
     clearInterval(intervalId);
-    setWpm(0);
     setRawKeyStrokes(0);
     setWpmKeyStrokes(0);
     setCurrInput("");
-    setPrevInput("");
     setIntervalId(null);
     setCurrWordIndex(0);
     setCurrCharIndex(-1);
     setCurrChar("");
     setHistory({});
     setInputWordsHistory({});
-    setWordsCorrect(new Set());
     setWordsInCorrect(new Set());
     textInputRef.current.focus();
     // console.log("fully reset waiting for next inputs");
@@ -375,13 +358,11 @@ const TypeBox = ({
   const start = () => {
     if (status === "finished") {
       setCurrInput("");
-      setPrevInput("");
       setCurrWordIndex(0);
       setCurrCharIndex(-1);
       setCurrChar("");
       setHistory({});
       setInputWordsHistory({});
-      setWordsCorrect(new Set());
       setWordsInCorrect(new Set());
       setStatus("waiting");
       textInputRef.current.focus();
@@ -501,15 +482,7 @@ const TypeBox = ({
 
     if (status === "finished") {
       setCurrInput("");
-      setPrevInput("");
       return;
-    }
-
-    // update stats when typing unless there is no effective wpm
-    if (wpmKeyStrokes !== 0) {
-      const currWpm =
-        (wpmKeyStrokes / 5 / (countDownConstant - countDown)) * 60.0;
-      setWpm(currWpm);
     }
 
     // start the game by typing any thing
@@ -572,7 +545,6 @@ const TypeBox = ({
           setCurrInput(prevInputWord + " ");
           setCurrCharIndex(prevInputWord.length - 1);
           setCurrWordIndex(currWordIndex - 1);
-          setPrevInput(prevInputWord);
         }
         return;
       }
@@ -622,39 +594,6 @@ const TypeBox = ({
           {c}
         </span>
       ));
-    }
-  };
-
-  const checkPrev = () => {
-    const wordToCompare = words[currWordIndex].toLowerCase().replace(/"/g, '\'');
-    const currInputWithoutSpaces = currInput.trim();
-    const isCorrect = wordToCompare === currInputWithoutSpaces;
-    if (!currInputWithoutSpaces || currInputWithoutSpaces.length === 0) {
-      return null;
-    }
-    if (isCorrect) {
-      // console.log("detected match");
-      wordsCorrect.add(currWordIndex);
-      wordsInCorrect.delete(currWordIndex);
-      let inputWordsHistoryUpdate = { ...inputWordsHistory };
-      inputWordsHistoryUpdate[currWordIndex] = currInputWithoutSpaces;
-      setInputWordsHistory(inputWordsHistoryUpdate);
-      // reset prevInput to empty (will not go back)
-      setPrevInput("");
-
-      // here count the space as effective wpm.
-      setWpmKeyStrokes(wpmKeyStrokes + 1);
-      return true;
-    } else {
-      // console.log("detected unmatch");
-      wordsInCorrect.add(currWordIndex);
-      wordsCorrect.delete(currWordIndex);
-      let inputWordsHistoryUpdate = { ...inputWordsHistory };
-      inputWordsHistoryUpdate[currWordIndex] = currInputWithoutSpaces;
-      setInputWordsHistory(inputWordsHistoryUpdate);
-      // append currInput to prevInput
-      setPrevInput(prevInput + " " + currInputWithoutSpaces);
-      return false;
     }
   };
 
@@ -788,13 +727,6 @@ const TypeBox = ({
     return "inactive-button";
   };
 
-  const getTimerButtonClassName = (buttonTimerCountDown) => {
-    if (countDownConstant === buttonTimerCountDown) {
-      return "active-button";
-    }
-    return "inactive-button";
-  };
-
   const getLanguageButtonClassName = (buttonLanguage) => {
     if (language === buttonLanguage) {
       return "active-button";
@@ -869,14 +801,6 @@ const TypeBox = ({
       />
       <div className="stats">
         <div>{getCurrentTranslator}</div>
-        <Stats
-          status={status}
-          wpm={wpm}
-          countDown={countDown}
-          countDownConstant={countDownConstant}
-          statsCharCount={statsCharCount}
-          rawKeyStrokes={rawKeyStrokes}
-        ></Stats>
         <div className="restart-button" key="restart-button">
           <Grid container justifyContent="center" alignItems="center">
             <Box display="flex" flexDirection="row">
@@ -885,7 +809,7 @@ const TypeBox = ({
                 color="secondary"
                 size="medium"
                 onClick={() => {
-                  reset(countDownConstant, difficulty, language, true);
+                  reset(difficulty, language, true);
                 }}
               >
                 <Tooltip title={REDO_BUTTON_TOOLTIP_TITLE}>
@@ -897,7 +821,7 @@ const TypeBox = ({
                 color="secondary"
                 size="medium"
                 onClick={() => {
-                  reset(countDownConstant, difficulty, language, false);
+                  reset(difficulty, language, false);
                 }}
               >
                 <Tooltip title={RESTART_BUTTON_TOOLTIP_TITLE}>
@@ -914,45 +838,30 @@ const TypeBox = ({
                       reset(COUNT_DOWN_8640, difficulty, language, false);
                     }}
                   >
-                    <span className={getTimerButtonClassName(COUNT_DOWN_8640)}>
-                      {COUNT_DOWN_8640}
-                    </span>
                   </IconButton>
                   <IconButton
                     onClick={() => {
                       reset(COUNT_DOWN_90, difficulty, language, false);
                     }}
                   >
-                    <span className={getTimerButtonClassName(COUNT_DOWN_90)}>
-                      {COUNT_DOWN_90}
-                    </span>
                   </IconButton>
                   <IconButton
                     onClick={() => {
                       reset(COUNT_DOWN_60, difficulty, language, false);
                     }}
                   >
-                    <span className={getTimerButtonClassName(COUNT_DOWN_60)}>
-                      {COUNT_DOWN_60}
-                    </span>
                   </IconButton>
                   <IconButton
                     onClick={() => {
                       reset(COUNT_DOWN_30, difficulty, language, false);
                     }}
                   >
-                    <span className={getTimerButtonClassName(COUNT_DOWN_30)}>
-                      {COUNT_DOWN_30}
-                    </span>
                   </IconButton>
                   <IconButton
                     onClick={() => {
                       reset(COUNT_DOWN_15, difficulty, language, false);
                     }}
                   >
-                    <span className={getTimerButtonClassName(COUNT_DOWN_15)}>
-                      {COUNT_DOWN_15}
-                    </span>
                   </IconButton>
                 </>
               )}
@@ -962,7 +871,6 @@ const TypeBox = ({
                 <IconButton
                   onClick={() => {
                     reset(
-                      countDownConstant,
                       DEFAULT_DIFFICULTY,
                       language,
                       false
@@ -987,7 +895,7 @@ const TypeBox = ({
                 </IconButton>
                 <IconButton
                   onClick={() => {
-                    reset(countDownConstant, HARD_DIFFICULTY, language, false);
+                    reset(HARD_DIFFICULTY, language, false);
                   }}
                 >
                   <Tooltip
@@ -1010,7 +918,7 @@ const TypeBox = ({
                 </IconButton>
                 <IconButton
                   onClick={() => {
-                    reset(countDownConstant, difficulty, ENGLISH_MODE, false);
+                    reset(difficulty, ENGLISH_MODE, false);
                   }}
                 >
                   <Tooltip title={ENGLISH_MODE_TOOLTIP_TITLE}>
@@ -1021,7 +929,7 @@ const TypeBox = ({
                 </IconButton>
                 <IconButton
                   onClick={() => {
-                    reset(countDownConstant, difficulty, CHINESE_MODE, false);
+                    reset(difficulty, CHINESE_MODE, false);
                   }}
                 >
                   <Tooltip title={CHINESE_MODE_TOOLTIP_TITLE}>

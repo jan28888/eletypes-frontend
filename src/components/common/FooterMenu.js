@@ -65,7 +65,7 @@ const FooterMenu = ({
 
   useEffect(() => {
     // 远程加载选项的逻辑
-    fetch(`http://192.168.50.66:8001/getHistoryList`)
+    fetch(`http://192.168.50.115:8001/getHistoryList`)
       .then(response => response.json())
       .then(data => setHistoryList(data));
   }, []);

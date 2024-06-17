@@ -67,6 +67,9 @@ function App() {
     setGameMode(currGameMode);
   };
 
+  // local persist book library setting
+  const [IsOpenBookLibrary, setIsOpenBookLibrary] = useState(false);
+
   // localStorage persist focusedMode setting
   const [isFocusedMode, setIsFocusedMode] = useState(
     localStorage.getItem("focused-mode") === "true"
@@ -107,7 +110,7 @@ function App() {
     let nameList = e.value.split('/');
     nameList = [nameList[2], nameList[3].slice(0, -5)]
     setArticalName(nameList);
-    fetch(`http://192.168.50.66:8001/getHistoryArtical?text=${e.value}`)
+    fetch(`http://192.168.50.115:8001/getHistoryArtical?text=${e.value}`)
     .then(response => response.json())
     .then(data => {
       setsentenceData(data);
@@ -125,6 +128,10 @@ function App() {
 
   const handleSoundTypeChange = (e) => {
     setSoundType(e.label);
+  };
+
+  const toggleSeletedBook = () => {
+    setIsOpenBookLibrary(!IsOpenBookLibrary);
   };
 
   const toggleFocusedMode = () => {
@@ -257,6 +264,7 @@ function App() {
             handleSoundTypeChange={handleSoundTypeChange}
             handleThemeChange={handleThemeChange}
             handleHistoryListChange={handleHistoryListChange}
+            toggleSeletedBook={toggleSeletedBook}
             toggleFocusedMode={toggleFocusedMode}
             toggleMusicMode={toggleMusicMode}
             toggleCoffeeMode={toggleCoffeeMode}
