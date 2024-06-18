@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Grid } from "@mui/material";
 import { Box } from "@mui/system";
-import { Tooltip} from "@mui/material";
+import { Tooltip } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
@@ -12,6 +12,7 @@ import {
   MUSIC_MODE,
   WORD_MODE_LABEL,
   SENTENCE_MODE_LABEL,
+  OPEN_LIBRARY,
   GAME_MODE_DEFAULT,
   GAME_MODE_SENTENCE,
   TRAINER_MODE,
@@ -33,6 +34,7 @@ import { SvgIcon } from "@mui/material";
 import KeyboardAltOutlinedIcon from '@mui/icons-material/KeyboardAltOutlined';
 import SchoolIcon from '@mui/icons-material/School';
 import { SOUND_MODE_TOOLTIP } from "../features/sound/sound";
+import ModalComponent from "../features/Modal";
 
 const FooterMenu = ({
   themesOptions,
@@ -82,6 +84,16 @@ const FooterMenu = ({
       return "active-game-mode-button";
     }
     return "inactive-game-mode-button";
+  };
+
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -187,6 +199,24 @@ const FooterMenu = ({
                   {SENTENCE_MODE_LABEL}
                 </span>
               </IconButton>
+              <IconButton
+                onClick={handleOpen}
+              >
+                <span
+                  className={getGameModeButtonClassName(
+                    gameMode,
+                    SENTENCE_MODE_LABEL
+                  )}
+                >
+                  {OPEN_LIBRARY}
+                </span>
+              </IconButton>
+              <ModalComponent
+                open={open}
+                handleClose={handleClose}
+                historyList={historyList}
+                handleHistoryListChange={handleHistoryListChange} 
+              />
               <Select
                 classNamePrefix="Select"
                 options={historyList}
@@ -203,20 +233,20 @@ const FooterMenu = ({
             <SupportMe></SupportMe>
             <Tooltip
               title={
-                <span style={{ whiteSpace: "pre-line", fontSize:"12px" }}>
+                <span style={{ whiteSpace: "pre-line", fontSize: "12px" }}>
                   {GITHUB_TOOLTIP_TITLE}
-                    <Link
-                      margin="inherit"
-                      href="https://muyangguo.xyz"
-                    >
-                      {AUTHOR}
-                    </Link>
-                    <Link
-                      margin="inherit"
-                      href="https://github.com/gamer-ai/eletype-frontend/"
-                    >
-                      {GITHUB_REPO_LINK}
-                    </Link>
+                  <Link
+                    margin="inherit"
+                    href="https://muyangguo.xyz"
+                  >
+                    {AUTHOR}
+                  </Link>
+                  <Link
+                    margin="inherit"
+                    href="https://github.com/gamer-ai/eletype-frontend/"
+                  >
+                    {GITHUB_REPO_LINK}
+                  </Link>
                 </span>
               }
               placement="top-start"
@@ -232,7 +262,7 @@ const FooterMenu = ({
               title={
                 <span style={{ whiteSpace: "pre-line" }}>
                   <iframe
-                  title="discord-widget"
+                    title="discord-widget"
                     src="https://discord.com/widget?id=993567075589181621&theme=dark"
                     width="100%"
                     height="300"

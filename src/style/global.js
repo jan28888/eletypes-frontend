@@ -44,7 +44,7 @@ export const GlobalStyles = createGlobalStyle`
     text-align: center;
   }
   .footer {
-    font-size: .75rem;
+    // font-size: .75rem;
     line-height: 1rem;
     padding: 0;
     position: relative;
